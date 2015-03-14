@@ -8,7 +8,7 @@ gtalk_export
 ## Usage
 _Export Google Talk/Hangouts chats to logfiles_
 
-Uses a modified version of [Jay2K1's Takeouts parser](http://hangoutparser.jay2k1.com/) (for Hangouts chats) alongside a custom mbox parser (for older Google Talk chats) to produce a single set of unified logfiles.
+Uses a modified version of [Jay2K1's Takeouts parser](http://hangoutparser.jay2k1.com/) (for Hangouts chats) alongside a custom mbox parser (for older Google Talk chats made before mid-2013) to produce a single set of unified logfiles.
 
 To use it, follow these steps:
 
