@@ -98,6 +98,8 @@ def parse_json(json_location, name, email, timestamp_format):
 
     conversations = hangouts.hangoutsToArray(mydata, timestamp_format)
 
+    print "JSON file first pass completed.  Writing to logfiles..."
+
     for conversation in conversations:
         filename = filename_sanitize(make_filename_json(conversation['members'],
                                                         name, email))
@@ -130,14 +132,19 @@ parser.add_argument("-t", "--timestamp-format",
 args = parser.parse_args()
 
 if args.mbox_location is None and args.json_location is None:
-    sys.exit("No mbox or JSON provided -- nothing to do!\n")
+    sys.exit("No mbox or JSON provided -- nothing to do!")
 
 if args.mbox_location:
+    print "Processing mbox file at %s" % args.mbox_location
     parse_mbox(args.mbox_location, args.name, args.email, args.timestamp_format)
+    print "Finished processing mbox file"
 
 if args.json_location:
+    print "Processing json file at %s" % args.json_location
     parse_json(args.json_location, args.name, args.email, args.timestamp_format)
+    print "Finished processing json file"
 
+print "GTalk/Hangouts export completed!"
 
 
 
