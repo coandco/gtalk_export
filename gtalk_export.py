@@ -22,7 +22,8 @@ def make_filename_json(member_array, name, email):
             if outstr != '':
                 outstr += "_"
             outstr += member_array[i];
-    return outstr + ".txt"
+    #Need to limit total filename size to 255
+    return outstr[:250] + ".txt"
 
 def msg_to_logline_json(message):
     return "%s <%s> %s\n" % (message['datetime'],  message['sender'], message['message'])
