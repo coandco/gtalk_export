@@ -186,7 +186,7 @@ def hangoutsToArray(json_input, timestamp_format):
                     messages[k]['message_html'] = replaceSmileys(msghtml)
             elif messages[k]['event_type'] == 'ADD_USER':
                 newuserid = in_event[k]['membership_change']['participant_id'][0]['chat_id']
-                newusername = retval[i]['members'][newuserid] or 'unknown_%s' % newuserid
+                newusername = retval[i]['members'][newuserid] if newuserid in retval[i]['members'].keys() else 'unknown_%s' % newuserid
                 messages[k]['message'] = "added user '%s' to conversation" % newusername
             elif messages[k]['event_type'] == 'REMOVE_USER':
                 newuserid = in_event[k]['membership_change']['participant_id'][0]['chat_id']
