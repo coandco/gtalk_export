@@ -90,7 +90,7 @@ def parse_mbox(mbox_location, my_name, my_email, timestamp_format):
                 outline = "%s <%s> %s\n" % (timestamp, speaker, content)
                 messageobj.append(outline)
 
-        write_to_file("%s.txt" % filename_sanitize(name), messageobj)
+        write_to_file("%s.txt" % filename_sanitize(name)[:250], messageobj)
 
 def parse_json(json_location, name, email, timestamp_format):
     with open(json_location, "r") as myfile:
