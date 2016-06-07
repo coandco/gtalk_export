@@ -65,7 +65,7 @@ def parse_mbox(mbox_location, my_name, my_email, timestamp_format):
             #We're in an old Google Talk Jabber conversation message
             payload = payload[0].as_string()
             # The emails have forced line breaks that end in an equals sign
-            payload = re.sub("=\r\n", "", payload)
+            payload = re.sub("=\r?\n", "", payload)
             # The emails replace all regular equals signs with =3D
             payload = re.sub("=3D", "=", payload)
             # The emails have a couple of chaff lines before the XML starts
