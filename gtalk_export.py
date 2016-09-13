@@ -1,3 +1,4 @@
+import os
 import mailbox
 import re
 import time
@@ -40,8 +41,17 @@ def write_to_file(filename, lines):
     with open(filename, "a") as myfile:
             myfile.write("".join(lines))
 
-def parse_mbox(mbox_location, my_name, my_email, timestamp_format):
-    mbox = mailbox.mbox(mbox_location)
+def parse_mailbox(mailbox_path, my_name, my_email, timestamp_format, use_mbox):
+    mailbox_path = os.path.join(mailbox_path,"")
+    if not os.path.isdir(mailbox_path + 'new'):
+        os.mkdir(mailbox_path + 'new')
+    if not os.path.isdir(mailbox_path + 'tmp'):
+        os.mkdir(mailbox_path + 'tmp')
+
+    if use_mbox:
+        mbox = mailbox.mbox(mailbox_path)        
+    else:
+        mbox = mailbox.Maildir(mailbox_path, None)
     sorted_mails = sorted(mbox, key=extract_date_mbox)
 
     for message in sorted_mails:
@@ -92,8 +102,8 @@ def parse_mbox(mbox_location, my_name, my_email, timestamp_format):
 
         write_to_file("%s.txt" % filename_sanitize(name)[:250], messageobj)
 
-def parse_json(json_location, name, email, timestamp_format):
-    with open(json_location, "r") as myfile:
+def parse_json(json_path, name, email, timestamp_format):
+    with open(json_path, "r") as myfile:
         mydata=myfile.read()
 
     conversations = hangouts.hangoutsToArray(mydata, timestamp_format)
@@ -110,11 +120,11 @@ def parse_json(json_location, name, email, timestamp_format):
         write_to_file(filename, messageobj)
 
 parser = argparse.ArgumentParser(prog="gtalk_export")
-parser.add_argument("-m", "--mbox-location",
+parser.add_argument("-p", "--mailbox-path",
                     required=False,
                     default=None,
-                    help="The location of the IMAP mbox to parse")
-parser.add_argument("-j", "--json-location",
+                    help="The location of the IMAP Maildir or mbox to parse")
+parser.add_argument("-j", "--json-path",
                     required=False,
                     default=None,
                     help="The location of the Takeouts JSON to parse")
@@ -128,20 +138,25 @@ parser.add_argument("-t", "--timestamp-format",
                     required=False,
                     default='%Y-%m-%d %H:%M:%S',
                     help="The location of the IMAP mbox to parse")
+parser.add_argument("-m", "--mbox",
+                    required=False,
+                    default=False,
+                    help="Use mbox instead of Maildir")                    
+                    
 
 args = parser.parse_args()
 
-if args.mbox_location is None and args.json_location is None:
+if args.mailbox_path is None and args.json_path is None:
     sys.exit("No mbox or JSON provided -- nothing to do!")
 
-if args.mbox_location:
-    print("Processing mbox file at %s" % args.mbox_location)
-    parse_mbox(args.mbox_location, args.name, args.email, args.timestamp_format)
-    print("Finished processing mbox file")
+if args.mailbox_path:
+    print("Processing mailbox at %s" % args.mailbox_path)
+    parse_mailbox(args.mailbox_path, args.name, args.email, args.timestamp_format, args.mbox)
+    print("Finished processing mailbox")
 
-if args.json_location:
-    print("Processing json file at %s" % args.json_location)
-    parse_json(args.json_location, args.name, args.email, args.timestamp_format)
+if args.json_path:
+    print("Processing json file at %s" % args.json_path)
+    parse_json(args.json_path, args.name, args.email, args.timestamp_format)
     print("Finished processing json file")
 
 print("GTalk/Hangouts export completed!")
