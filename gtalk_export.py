@@ -115,8 +115,7 @@ def parse_json(json_path, name, email, timestamp_format):
                                                         name, email))
         messageobj = []
         for message in conversation['messages']:
-            messageobj.append(msg_to_logline_json(message).encode("ascii", 
-                                                                  "replace"))
+            messageobj.append(msg_to_logline_json(message).encode("UTF-8"))
         write_to_file(filename, messageobj)
 
 parser = argparse.ArgumentParser(prog="gtalk_export")
