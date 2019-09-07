@@ -104,7 +104,7 @@ def hangoutsToArray(json_input, timestamp_format):
     # decode JSON
     decoded = json.loads(json_input)
     # extract useful part
-    rawconvos = decoded['conversation_state']
+    rawconvos = decoded['conversations']
     #print "%r" % rawconvos
     retval = []
     # loop through conversations
@@ -115,8 +115,8 @@ def hangoutsToArray(json_input, timestamp_format):
         retval.append({})
         convo = rawconvos[i]
         #print "%r" % convo
-        in_conv = rawconvos[i]['conversation_state']['conversation']
-        in_event = rawconvos[i]['conversation_state']['event']
+        in_conv = rawconvos[i]['conversation']['conversation']
+        in_event = rawconvos[i]['events']
         pdata = in_conv['participant_data']
         retval[i]['type'] = in_conv['type']
         retval[i]['msgcount'] = len(in_event)
@@ -177,7 +177,7 @@ def hangoutsToArray(json_input, timestamp_format):
                     for att in in_event[k]['chat_message']['message_content']['attachment']:
                         # echo "<pre>";print_r($att);echo "</pre>";
                         if att['embed_item']['type'][0] == 'PLUS_PHOTO':
-                            imgurl = att['embed_item']['embeds.PlusPhoto.plus_photo']['url']
+                            imgurl = att['embed_item']['plus_photo']['url']
                             msg += imgurl
                             msghtml += '<a href="%s" target="_blank"><img src="%s" alt="attached image" style="max-width:%s"></a>' % (imgurl, imgurl, "100%")
                 # replace unicode emoticon characters by smileys
