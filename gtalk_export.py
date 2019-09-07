@@ -8,6 +8,7 @@ import HTMLParser
 import argparse
 import hangouts
 from email.utils import parsedate
+import quopri
 
 def extract_date_mbox(email):
     date = email.get('Date')
@@ -39,28 +40,57 @@ def write_to_file(filename, lines):
     
     '''
     with open(filename, "a") as myfile:
-            myfile.write("".join(lines))
+            myfile.write(u"".join(lines).encode('utf-8'))
 
 def parse_mailbox(mailbox_path, my_name, my_email, timestamp_format, use_mbox):
-    mailbox_path = os.path.join(mailbox_path,"")
-    if not os.path.isdir(mailbox_path + 'new'):
-        os.mkdir(mailbox_path + 'new')
-    if not os.path.isdir(mailbox_path + 'tmp'):
-        os.mkdir(mailbox_path + 'tmp')
+    if not use_mbox:
+        mailbox_path = os.path.join(mailbox_path,"")
+        if not os.path.isdir(mailbox_path + 'new'):
+            os.mkdir(mailbox_path + 'new')
+        if not os.path.isdir(mailbox_path + 'tmp'):
+            os.mkdir(mailbox_path + 'tmp')
 
     if use_mbox:
-        mbox = mailbox.mbox(mailbox_path)        
+        mbox = mailbox.mbox(mailbox_path)
     else:
         mbox = mailbox.Maildir(mailbox_path, None)
     sorted_mails = sorted(mbox, key=extract_date_mbox)
 
+    # Sometimes thunderbird will produce mbox files with duplicate messages.
+    # Keep track of all seen Message-ID's to prevent writing out duplicate
+    # lines to the logs.
+    seen_ids = set()
+
     for message in sorted_mails:
         messageobj = []
+
+        # Very rarely (happened to me with only 1 message out of 25,000),
+        # Thunderbird/GMail will produce a malformed message with a payload,
+        # but no metadata. Just skip these, but print a warning so the user
+        # can ensure that this is not happening too often.
+        if len(message.keys()) == 0:
+            print("Warning: Skipping malformed message")
+            continue
+
+        # Skip duplicates
+        if message['Message-ID'] in seen_ids:
+            continue
+        seen_ids.add(message['Message-ID'])
+
         name = re.sub("Chat with ", "", message['subject'])
 
         payload = message.get_payload()
         if type(payload) is str:
             # We're in one of the new hybrid-style single-use messages
+
+            # Some (but not all) of these messages use quoted-printable
+            # encoding (which uses = as an escape character).
+            # The remainder are encoded with 7bit ASCII, which must not
+            # be decoded, because treating = as an escape causes havoc.
+            if message['Content-Transfer-Encoding'] == 'quoted-printable':
+                payload = quopri.decodestring(payload)
+                payload = payload.decode('utf-8')
+            payload = payload.strip()
             to_name = re.sub(" <[^>]*>", "", message.get('To'))
             from_name = re.sub(" <[^>]*>", "", message.get('From'))
             if not name:
@@ -73,15 +103,16 @@ def parse_mailbox(mailbox_path, my_name, my_email, timestamp_format, use_mbox):
             messageobj.append(outline)
         else:
             #We're in an old Google Talk Jabber conversation message
+
             payload = payload[0].as_string()
-            # The emails have forced line breaks that end in an equals sign
-            payload = re.sub("=\r?\n", "", payload)
-            # The emails replace all regular equals signs with =3D
-            payload = re.sub("=3D", "=", payload)
+            # Seemingly all of these messages use quoted-printable encoding,
+            # even though 'Content-Transfer-Encoding' is never set.
+            payload = quopri.decodestring(payload)
+            payload = payload.decode('utf-8')
             # The emails have a couple of chaff lines before the XML starts
             payload = re.sub(r'^[^<]*<', "<", payload)
 
-            chatxml = xml.dom.minidom.parseString(payload)
+            chatxml = xml.dom.minidom.parseString(payload.encode('utf-8'))
             
             for messagexml in chatxml.getElementsByTagName("cli:message"):
                 speaker = messagexml.getAttribute("from")
@@ -136,10 +167,9 @@ parser.add_argument("-e", "--email",
 parser.add_argument("-t", "--timestamp-format",
                     required=False,
                     default='%Y-%m-%d %H:%M:%S',
-                    help="The location of the IMAP mbox to parse")
+                    help="Timestamp format to display in output logs")
 parser.add_argument("-m", "--mbox",
-                    required=False,
-                    default=False,
+                    action='store_true',
                     help="Use mbox instead of Maildir")                    
                     
 
@@ -159,7 +189,3 @@ if args.json_path:
     print("Finished processing json file")
 
 print("GTalk/Hangouts export completed!")
-
-
-
-
