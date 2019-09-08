@@ -40,7 +40,7 @@ def write_to_file(filename, lines):
     
     '''
     with open(filename, "a") as myfile:
-            myfile.write(u"".join(lines).encode('utf-8'))
+            myfile.write("".join(lines))
 
 def parse_mailbox(mailbox_path, my_name, my_email, timestamp_format, use_mbox):
     if not use_mbox:
@@ -100,7 +100,7 @@ def parse_mailbox(mailbox_path, my_name, my_email, timestamp_format, use_mbox):
             
             pars = HTMLParser.HTMLParser()
             outline = "%s <%s> %s\n" % (timestamp, from_name, pars.unescape(payload))
-            messageobj.append(outline)
+            messageobj.append(outline.encode('utf-8'))
         else:
             #We're in an old Google Talk Jabber conversation message
 
@@ -129,7 +129,7 @@ def parse_mailbox(mailbox_path, my_name, my_email, timestamp_format, use_mbox):
                     # like a time-gap or user-unavailable message
                     continue
                 outline = "%s <%s> %s\n" % (timestamp, speaker, content)
-                messageobj.append(outline)
+                messageobj.append(outline.encode('utf-8'))
 
         write_to_file("%s.txt" % filename_sanitize(name)[:250], messageobj)
 
